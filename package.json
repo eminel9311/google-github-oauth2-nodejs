@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "start": "ts-node-dev --respawn --transpile-only src/app.ts",
+    "start:prod": "NODE_ENV=production pm2 start npm -- start",
     "db:migrate": "npx prisma migrate dev --name 'users' --create-only",
     "db:generate": " npx prisma generate",
     "db:push": "npx prisma db push"
