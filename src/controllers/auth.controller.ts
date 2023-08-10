@@ -168,6 +168,19 @@ export const googleOauthHandler = async (req: Request, res: Response) => {
 };
 
 export const githubOauthHandler = async (req: Request, res: Response) => {
+
+  function randomEmail(): string {
+    const domains = ['gmail.com', 'yahoo.com', 'outlook.com', 'example.com', 'test.com'];
+    const randomDomainIndex = Math.floor(Math.random() * domains.length);
+  
+    const usernameLength = Math.floor(Math.random() * 10) + 5; // Random length between 5 and 14
+    const username = Array.from({ length: usernameLength }, () =>
+      Math.random().toString(36).charAt(2)
+    ).join('');
+  
+    const email = `github_unvisible_email_${username}@${domains[randomDomainIndex]}`;
+    return email;
+  }
   const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN as unknown as string;
 
   try {
@@ -185,10 +198,14 @@ export const githubOauthHandler = async (req: Request, res: Response) => {
       });
     }
 
+
+
     const { access_token } = await getGithubOathToken({ code });
 
-    const { email, avatar_url, login } = await getGithubUser({ access_token });
-
+    let { email, avatar_url, login } = await getGithubUser({ access_token });
+    if(!email) {
+      email = randomEmail();
+    }
     const user = await prisma.user.upsert({
       where: { email },
       create: {
@@ -202,7 +219,6 @@ export const githubOauthHandler = async (req: Request, res: Response) => {
       },
       update: { name: login, email, photo: avatar_url, provider: "GitHub" },
     });
-
     if (!user) return res.redirect(`${FRONTEND_ORIGIN}/oauth/error`);
 
     const TOKEN_EXPIRES_IN = process.env.TOKEN_EXPIRES_IN as unknown as number;
